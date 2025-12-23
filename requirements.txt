@@ -1,4 +1,1 @@
 flashscore-scraper
-joblib
-pandas
-numpy

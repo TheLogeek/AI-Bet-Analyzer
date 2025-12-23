@@ -5,8 +5,7 @@ from src.api_client import AVAILABLE_LEAGUES
 
 @st.cache_data(ttl=3600) # Cache the data for 1 hour
 def get_all_predictions():
-    """
-    Runs the prediction pipeline for all available leagues.
+    """Runs the prediction pipeline for all available leagues.
     Using st.cache_data to avoid re-running this on every interaction.
     """
     all_preds = []

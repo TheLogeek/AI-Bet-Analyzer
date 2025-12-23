@@ -1,5 +1,6 @@
 import os
 import requests
+import streamlit as st
 from dotenv import load_dotenv
 
 AVAILABLE_LEAGUES = {
@@ -22,7 +23,7 @@ def get_upcoming_games(sport_key):
     # Load environment variables from .env file
     load_dotenv()
     
-    api_key = os.getenv('API_KEY')
+    api_key = st.secrets["API_KEY"]
     
     if not api_key or api_key == 'YOUR_API_KEY_HERE':
         print("Error: API_KEY not found or not set in .env file.")

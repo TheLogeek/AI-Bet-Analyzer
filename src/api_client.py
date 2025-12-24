@@ -1,7 +1,11 @@
 import os
 import requests
+<<<<<<< HEAD
 from dotenv import load_dotenv
 import streamlit as st # Added for Streamlit messages
+=======
+import streamlit as st
+>>>>>>> b46ce99f07e1991ecab81e90702728bebf3c8177
 
 AVAILABLE_LEAGUES = {
     'NCAAB': 'basketball_ncaab',
@@ -13,7 +17,7 @@ def get_upcoming_games(sport_key):
     """Fetches upcoming games and their odds from The Odds API."""
     load_dotenv()
     
-    api_key = os.getenv('API_KEY')
+    api_key = st.secrets["API_KEY"]
     
     if not api_key or api_key == 'YOUR_API_KEY_HERE':
         st.error("Error: API_KEY not found or not set in .env file.")

@@ -37,7 +37,7 @@ The prediction process involves several key steps:
     *   It calls `generate_predictions` for all supported leagues (NCAA, NBA, WNBA).
     *   Predictions are displayed in an interactive table, allowing users to filter by league and sort by the predicted probability (highest probability first by default).
 
-## Setup and Installation
+## Setup and Installation (locally) otherwise use the webapp [https://ai-bet-analyzer.streamlit.app](https://ai-bet-analyzer.streamlit.app)
 
 ### Prerequisites
 - Python 3.8+
@@ -81,8 +81,3 @@ The prediction process involves several key steps:
 
 4.  **Filter and Sort**: Use the "Filter by League" dropdown and "Sort Predictions By" selectbox to refine your view of the predictions.
 
-## Contributing
-(Optional: Add guidelines for contributions if this is an open-source project.)
-
-## License
-(Optional: Add license information.)

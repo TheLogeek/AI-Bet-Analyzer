@@ -7,16 +7,7 @@ import re
 import os
 
 def get_data_for_date(date_str, league_key):
-    """
-    Fetches basketball game data (scores and odds) for a given date and league from Covers.com.
-
-    Args:
-        date_str (str): The date in 'YYYY-MM-DD' format.
-        league_key (str): The league abbreviation used in Covers.com URL (e.g., 'ncaab', 'nba', 'wnba').
-
-    Returns:
-        list: A list of dictionaries, where each dictionary represents a game.
-    """
+    """Fetches basketball game data for a given date and league from Covers.com."""
     url = f"https://www.covers.com/sports/{league_key}/matchups?selectedDate={date_str}"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -36,7 +27,6 @@ def get_data_for_date(date_str, league_key):
     game_cards = soup.find_all('article', class_='gamebox')
     
     if not game_cards:
-        # Fallback for older Covers.com structures if present, or if 'gamebox' isn't always the class
         game_cards = soup.find_all('div', class_='rc-Card cmg_matchup_game_card')
         if not game_cards:
             print(f"No game cards found for {date_str} in league {league_key} with expected selectors.")
@@ -77,7 +67,6 @@ def get_data_for_date(date_str, league_key):
                     ou_line = match.group(1)
 
             if home_team_fullname == 'N/A' or away_team_fullname == 'N/A' or home_score == 'N/A' or away_score == 'N/A' or ou_line == 'N/A':
-                # print(f"Skipping game due to missing essential data: {away_team_fullname} vs {home_team_fullname}")
                 continue
 
             games_data.append({
@@ -96,9 +85,7 @@ def get_data_for_date(date_str, league_key):
     return games_data
 
 def scrape_historical_data(start_date, end_date, league_key, output_file):
-    """
-    Scrapes basketball data for a given league and date range, saving it to a CSV file.
-    """
+    """Scrapes basketball data for a given league and date range, saving it to a CSV file."""
     current_date = datetime.strptime(start_date, '%Y-%m-%d')
     end_date_dt = datetime.strptime(end_date, '%Y-%m-%d')
     
@@ -110,13 +97,12 @@ def scrape_historical_data(start_date, end_date, league_key, output_file):
         if games_for_date:
             all_games.extend(games_for_date)
         
-        time.sleep(1) # Be respectful
+        time.sleep(1)
         current_date += timedelta(days=1)
     
     if all_games:
         df = pd.DataFrame(all_games)
         
-        # Check if file exists to append or write new
         if os.path.exists(output_file):
             df.to_csv(output_file, mode='a', header=False, index=False)
         else:
@@ -127,23 +113,16 @@ def scrape_historical_data(start_date, end_date, league_key, output_file):
         print(f"No games scraped for {league_key.upper()} in the specified date range.")
 
 if __name__ == "__main__":
-    # Define leagues and date ranges
-    # Covers.com league keys: 'ncaab', 'nba', 'wnba'
-    
     leagues_to_scrape = [
-        # Existing NCAAB data
         ('ncaab', '2022-11-01', '2023-03-31'),
-        # New: NBA data (last two full seasons)
-        ('nba', '2022-10-01', '2023-06-30'), # NBA 2022-2023 season
-        ('nba', '2023-10-01', '2024-06-30'), # NBA 2023-2024 season
-        # New: WNBA data (last two full seasons)
-        ('wnba', '2023-05-01', '2023-10-31'), # WNBA 2023 season
-        ('wnba', '2024-05-01', '2024-10-31'), # WNBA 2024 season
+        ('nba', '2022-10-01', '2023-06-30'),
+        ('nba', '2023-10-01', '2024-06-30'),
+        ('wnba', '2023-05-01', '2023-10-31'),
+        ('wnba', '2024-05-01', '2024-10-31'),
     ]
     
     output_filename = 'data/raw/historical_basketball_data.csv'
 
-    # Clear the file to start fresh with combined data
     if os.path.exists(output_filename):
         os.remove(output_filename)
         print(f"Removed existing data file: {output_filename}")

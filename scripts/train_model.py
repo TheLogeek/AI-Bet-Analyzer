@@ -10,13 +10,9 @@ import os
 import numpy as np
 
 def train_ensemble_model():
-    """
-    Trains and tunes multiple base models, then combines them into a StackingClassifier
-    on the advanced feature-engineered dataset.
-    """
+    """Trains and tunes a StackingClassifier on advanced feature-engineered data."""
     print("Starting ENSEMBLE model training and hyperparameter tuning...")
 
-    # Load the processed data
     try:
         df = pd.read_csv('data/processed/featured_basketball_data_advanced.csv')
         print(f"Loaded {len(df)} games from advanced processed data.")
@@ -25,7 +21,6 @@ def train_ensemble_model():
         print("Please run the advanced feature engineering script first.")
         return
 
-    # --- Feature Selection ---
     features = [
         'Home_Avg_MOV', 'Home_Avg_Pts_For', 'Home_Avg_Pts_Against', 'Home_Avg_OU_Hit_Rate',
         'Away_Avg_MOV', 'Away_Avg_Pts_For', 'Away_Avg_Pts_Against', 'Away_Avg_OU_Hit_Rate',
@@ -36,18 +31,16 @@ def train_ensemble_model():
     X = df[features]
     y = df[target]
 
-    print("\nFeatures used for training:")
+    print("Features used for training:")
     print(X.columns.tolist())
     
-    # --- Data Splitting ---
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    print(f"\nData split into training ({len(X_train)} samples) and testing ({len(X_test)} samples).")
+    print(f"Data split into training ({len(X_train)} samples) and testing ({len(X_test)} samples).")
 
-    # --- Base Model 1: XGBoost Classifier ---
-    print("\n--- Training and Tuning XGBoost Base Model ---")
+    print("--- Training and Tuning XGBoost Base Model ---")
     xgb_param_grid = {
         'n_estimators': [100, 200, 300],
         'learning_rate': [0.05, 0.1, 0.2],
@@ -62,8 +55,7 @@ def train_ensemble_model():
     best_xgb = xgb_search.best_estimator_
     print(f"Best XGBoost Params: {xgb_search.best_params_}")
 
-    # --- Base Model 2: LightGBM Classifier ---
-    print("\n--- Training and Tuning LightGBM Base Model ---")
+    print("--- Training and Tuning LightGBM Base Model ---")
     lgbm_param_grid = {
         'n_estimators': [100, 200, 300],
         'learning_rate': [0.05, 0.1, 0.2],
@@ -77,8 +69,7 @@ def train_ensemble_model():
     best_lgbm = lgbm_search.best_estimator_
     print(f"Best LightGBM Params: {lgbm_search.best_params_}")
 
-    # --- Base Model 3: RandomForest Classifier ---
-    print("\n--- Training and Tuning RandomForest Base Model ---")
+    print("--- Training and Tuning RandomForest Base Model ---")
     rf_param_grid = {
         'n_estimators': [100, 200, 300],
         'max_depth': [5, 10, 15],
@@ -91,15 +82,13 @@ def train_ensemble_model():
     best_rf = rf_search.best_estimator_
     print(f"Best RandomForest Params: {rf_search.best_params_}")
 
-    # --- Stacking Classifier ---
-    print("\n--- Building Stacking Ensemble Model ---")
+    print("--- Building Stacking Ensemble Model ---")
     estimators = [
         ('xgb', best_xgb),
         ('lgbm', best_lgbm),
         ('rf', best_rf)
     ]
     
-    # Use a simple Logistic Regression as the final estimator
     stk_model = StackingClassifier(
         estimators=estimators, 
         final_estimator=LogisticRegression(random_state=42, solver='liblinear'),
@@ -111,8 +100,7 @@ def train_ensemble_model():
     print("Fitting Stacking Ensemble Model...")
     stk_model.fit(X_train, y_train)
 
-    # --- Model Evaluation ---
-    print("\nEvaluating Stacking Ensemble Model performance...")
+    print("Evaluating Stacking Ensemble Model performance...")
     y_pred = stk_model.predict(X_test)
     y_pred_proba = stk_model.predict_proba(X_test)[:, 1]
 
@@ -122,15 +110,14 @@ def train_ensemble_model():
     print(f"Ensemble Model Accuracy: {accuracy:.4f}")
     print(f"Ensemble Model AUC-ROC Score: {roc_auc:.4f}")
     
-    print("\nEnsemble Model Classification Report:")
+    print("Ensemble Model Classification Report:")
     print(classification_report(y_test, y_pred, target_names=['Under', 'Over']))
 
-    # --- Save the Ensemble Model ---
     os.makedirs('models', exist_ok=True)
     model_path = 'models/xgb_lgbm_rf_stacking_model.joblib'
     joblib.dump(stk_model, model_path)
     
-    print(f"\nEnsemble model saved successfully to '{model_path}'")
+    print(f"Ensemble model saved successfully to '{model_path}'")
 
 if __name__ == "__main__":
     train_ensemble_model()

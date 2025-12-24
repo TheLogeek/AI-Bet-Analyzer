@@ -2,10 +2,9 @@ import pandas as pd
 import joblib
 from src.api_client import get_upcoming_games, AVAILABLE_LEAGUES
 import numpy as np
+import streamlit as st
 
-# --- Team Name Standardization ---
 TEAM_NAME_MAP = {
-    # NCAA
     "St. John's Red Storm": "St. John'S",
     "CSU Bakersfield Roadrunners": "Cal State Bakersfield",
     "Missouri St Bears": "Missouri State",
@@ -192,7 +191,7 @@ TEAM_NAME_MAP = {
     "North Carolina Tar Heels": "North Carolina",
     "Fordham Rams": "Fordham",
     "Rhode Island Rams": "Rhode Island",
-    "St. Joseph's Hawks": "Saint Joseph'S", # Duplicate, ensuring coverage
+    "St. Joseph's Hawks": "Saint Joseph'S",
 
     # NBA
     "Atlanta Hawks": "Atlanta",
@@ -242,27 +241,17 @@ TEAM_NAME_MAP = {
 }
 
 def standardize_team_name(team_name):
-    # Normalize input team name for comparison (e.g., "Los Angeles Lakers" -> "Los Angeles Lakers")
-    # This also helps with consistency if the map keys are title-cased.
-    normalized_input = team_name.title() 
+    normalized_input = team_name.title()
 
-    # Check for direct or close matches in the map
-    # This is for mapping 'TheOddsAPI' team names to 'Covers.com' team names
-    # e.g., "Los Angeles Clippers" from OddsAPI to "La Clippers" in Covers
     if normalized_input in TEAM_NAME_MAP:
         return TEAM_NAME_MAP[normalized_input].lower()
     
-    # Check if any value in TEAM_NAME_MAP already matches the normalized_input
-    # This covers cases where Covers.com names are already clean (e.g., "Atlanta" for "Atlanta Hawks")
     for key, value in TEAM_NAME_MAP.items():
-        if normalized_input == key.title(): # Compare OddsAPI name (key) to input
+        if normalized_input == key.title():
              return value.lower()
 
-    # Fallback to existing logic if not found in map
     team_name_lower = team_name.lower()
     
-    # Common suffixes for NCAA teams, to extract base name (e.g., "Duke Blue Devils" -> "Duke")
-    # Expanded list of suffixes to better handle various team names
     common_suffixes = [
         ' state', ' tech', ' a&m', ' am', ' red storm', ' roadrunners', ' bears', ' gaels', ' trojans', ' rebels',
         ' buckeyes', ' wolfpack', ' tigers', ' cougars', ' ramblers', ' knights', ' spartans', ' beavers',
@@ -277,8 +266,6 @@ def standardize_team_name(team_name):
         ' dream', ' sky', ' sun', ' wings', ' fever', ' aces', ' sparks', ' lynx', ' liberty', ' mercury',
         ' storm', ' mystics'
     ]
-    # More aggressive suffix removal for common team names, e.g., "Los Angeles Lakers" -> "Los Angeles"
-    # This is particularly useful for NBA/WNBA where city names are common prefixes.
     city_suffixes = [
         ' lakers', ' clippers', ' nets', ' celtics', ' hornets', ' bulls', ' cavaliers', ' mavericks',
         ' pistons', ' warriors', ' rockets', ' pacers', ' grizzlies', ' heat', ' bucks', ' timberwolves',
@@ -289,13 +276,10 @@ def standardize_team_name(team_name):
 
     for suffix in common_suffixes + city_suffixes:
         if team_name_lower.endswith(suffix):
-            # Remove suffix and strip any leading/trailing spaces
             base_name = team_name_lower.replace(suffix, '').strip()
-            if base_name: # Ensure base_name is not empty after stripping suffix
+            if base_name:
                 return base_name
 
-    # If all else fails, return the first word of the team name, lowercased
-    # This is a very generic fallback and might lead to more collisions
     return team_name_lower.split(' ')[0] if team_name_lower else team_name_lower
 
 def get_team_history(team_name, historical_df):
@@ -313,12 +297,10 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
     std_home_team = standardize_team_name(home_team)
     std_away_team = standardize_team_name(away_team)
 
-    # If NEITHER team has ANY history, we cannot proceed.
     if len(home_history) == 0 and len(away_history) == 0:
         print(f"Skipping {home_team} vs {away_team}: No historical data for either team.")
-        return None # Cannot calculate features without any history
+        return None
 
-    # Dynamically adjust window size if history is limited for a team
     home_window = min(len(home_history), window_size)
     away_window = min(len(away_history), window_size)
 
@@ -326,10 +308,7 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
     away_recent = away_history.head(away_window)
 
     home_stats = {'mov': [], 'pts_for': [], 'pts_against': [], 'ou_hits': []}
-    # Only iterate if there's history for the home team
     if home_window > 0:
-        for _, game in home_recent.iterrows():
-            # Ensure OU_Line is not NaN before comparison, default to 0 if it is
             ou_line_val = game.get('OU_Line', 0)
             if pd.isna(ou_line_val):
                 ou_line_val = 0
@@ -340,17 +319,15 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
                 home_stats['pts_for'].append(game['HomeScore'])
                 home_stats['pts_against'].append(game['AwayScore'])
                 home_stats['ou_hits'].append(ou_hit)
-            else: # Home team was away team in the historical game
+            else:
                 home_stats['mov'].append(game['AwayScore'] - game['HomeScore'])
                 home_stats['pts_for'].append(game['AwayScore'])
                 home_stats['pts_against'].append(game['HomeScore'])
                 home_stats['ou_hits'].append(ou_hit)
 
     away_stats = {'mov': [], 'pts_for': [], 'pts_against': [], 'ou_hits': []}
-    # Only iterate if there's history for the away team
     if away_window > 0:
         for _, game in away_recent.iterrows():
-            # Ensure OU_Line is not NaN before comparison, default to 0 if it is
             ou_line_val = game.get('OU_Line', 0)
             if pd.isna(ou_line_val):
                 ou_line_val = 0
@@ -361,13 +338,12 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
                 away_stats['pts_for'].append(game['AwayScore'])
                 away_stats['pts_against'].append(game['HomeScore'])
                 away_stats['ou_hits'].append(ou_hit)
-            else: # Away team was home team in the historical game
+            else:
                 away_stats['mov'].append(game['HomeScore'] - game['AwayScore'])
                 away_stats['pts_for'].append(game['HomeScore'])
                 away_stats['pts_against'].append(game['AwayScore'])
                 away_stats['ou_hits'].append(ou_hit)
 
-    # Calculate features, using 0 for stats if history was insufficient/empty
     features = {
         'Home_Avg_MOV': np.mean(home_stats['mov']) if home_stats['mov'] else 0,
         'Home_Avg_Pts_For': np.mean(home_stats['pts_for']) if home_stats['pts_for'] else 0,
@@ -379,7 +355,6 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
         'Away_Avg_OU_Hit_Rate': np.mean(away_stats['ou_hits']) if away_stats['ou_hits'] else 0
     }
     
-    # Calculate difference features. If a team had no history, its averages are 0, so diffs will be correct.
     features['Avg_MOV_Diff'] = features['Home_Avg_MOV'] - features['Away_Avg_MOV']
     features['Avg_Pts_For_Diff'] = features['Home_Avg_Pts_For'] - features['Away_Avg_Pts_For']
     features['Avg_Pts_Against_Diff'] = features['Home_Avg_Pts_Against'] - features['Away_Avg_Pts_Against']
@@ -388,22 +363,21 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
     return features
 
 def generate_predictions(sport_key: str):
-    print(f"Generating predictions for {sport_key}...")
+    st.info(f"Generating predictions for {sport_key}...")
 
     try:
         model = joblib.load('models/xgb_lgbm_rf_stacking_model.joblib')
         historical_df = pd.read_csv('data/raw/historical_basketball_data.csv', parse_dates=['Date'])
-        # Ensure correct data types for calculations
         for col in ['HomeScore', 'AwayScore', 'OU_Line']:
             historical_df[col] = pd.to_numeric(historical_df[col], errors='coerce')
         historical_df.dropna(subset=['HomeScore', 'AwayScore', 'OU_Line'], inplace=True)
     except FileNotFoundError as e:
-        print(f"Error loading model or data: {e}.")
+        st.error(f"Error loading model or data: {e}.")
         return []
 
     upcoming_games = get_upcoming_games(sport_key)
     if not upcoming_games:
-        print(f"No upcoming games to predict for {sport_key}.")
+        st.warning(f"No upcoming games to predict for {sport_key}.")
         return []
 
     predictions = []
@@ -414,11 +388,10 @@ def generate_predictions(sport_key: str):
         
         ou_line = None
         bookmakers = game.get('bookmakers', [])
-        preferred_books = ['draftkings', 'fanduel', 'betmgm', 'betonlineag', 'bovada'] # Added more preferred books
-        # Sort bookmakers to prioritize preferred ones, then by existence of 'totals'
+        preferred_books = ['draftkings', 'fanduel', 'betmgm', 'betonlineag', 'bovada']
         sorted_bookmakers = sorted(bookmakers, key=lambda b: (
             preferred_books.index(b['key']) if b['key'] in preferred_books else len(preferred_books),
-            not any(market['key'] == 'totals' for market in b.get('markets', [])) # Prioritize bookmakers with 'totals'
+            not any(market['key'] == 'totals' for market in b.get('markets', []))
         ))
 
         for bookmaker in sorted_bookmakers:
@@ -431,15 +404,15 @@ def generate_predictions(sport_key: str):
                 break
         
         if not ou_line:
-            print(f"Skipping {home_team} vs {away_team}: No OU_Line found from preferred bookmakers.")
+            st.warning(f"Skipping {home_team} vs {away_team}: No OU_Line found from preferred bookmakers.")
             continue
 
         features = calculate_features_for_game(home_team, away_team, historical_df)
         
-        if features is None: # Changed from 'not features' to 'features is None' for clarity
+        if features is None:
             home_history_len = len(get_team_history(home_team, historical_df))
             away_history_len = len(get_team_history(away_team, historical_df))
-            print(f"Skipping {home_team} vs {away_team}: Not enough historical data (Home: {home_history_len}, Away: {away_history_len}).")
+            st.warning(f"Skipping {home_team} vs {away_team}: Not enough historical data (Home: {home_history_len}, Away: {away_history_len}).")
             continue
 
         feature_cols = [
@@ -462,7 +435,7 @@ def generate_predictions(sport_key: str):
             'Probability': probability
         })
 
-    print(f"Successfully generated {len(predictions)} predictions for {sport_key}.")
+    st.success(f"Successfully generated {len(predictions)} predictions for {sport_key}.")
     return predictions
 
 
@@ -474,8 +447,8 @@ if __name__ == '__main__':
             all_predictions.extend(predictions)
     
     if all_predictions:
-        print("\n--- All Upcoming Predictions ---")
+        st.info("\n--- All Upcoming Predictions ---")
         pred_df = pd.DataFrame(all_predictions)
-        print(pred_df.to_string())
+        st.dataframe(pred_df)
     else:
-        print("\nNo predictions were generated for any league.")
+        st.info("\nNo predictions were generated for any league.")

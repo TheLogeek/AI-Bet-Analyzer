@@ -34,8 +34,8 @@ def get_upcoming_games(sport_key):
         response = requests.get(url, timeout=30)
         response.raise_for_status()
 
-        st.info(f"Remaining requests: {response.headers['x-requests-remaining']}")
-        st.info(f"Used requests: {response.headers['x-requests-used']}")
+        #st.info(f"Remaining requests: {response.headers['x-requests-remaining']}")
+        #st.info(f"Used requests: {response.headers['x-requests-used']}")
         
         games = response.json()
         

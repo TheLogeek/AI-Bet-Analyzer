@@ -56,7 +56,6 @@ def main():
         page_icon="🏀",
         layout="wide"
     )
-=======
     all_preds = []
     for league_name, sport_key in AVAILABLE_LEAGUES.items():
         st.write(f"Fetching predictions for {league_name}...")
@@ -74,12 +73,10 @@ def main():
         page_icon="🏀",
         layout="wide"
     )
->>>>>>> b46ce99f07e1991ecab81e90702728bebf3c8177
 
     st.title("🏀 AI Bet Analyzer")
     st.write("Get daily Over/Under predictions for basketball matches, powered by a hybrid ML model.")
 
-<<<<<<< HEAD
     if 'predictions' not in st.session_state:
         st.session_state['predictions'] = None
     
@@ -188,7 +185,6 @@ def main():
     else:
         st.info("Click the 'Generate Today's Predictions' button to begin.")
 
->>>>>>> b46ce99f07e1991ecab81e90702728bebf3c8177
 
 
 if __name__ == "__main__":

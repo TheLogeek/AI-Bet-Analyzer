@@ -193,7 +193,6 @@ TEAM_NAME_MAP = {
     "Rhode Island Rams": "Rhode Island",
     "St. Joseph's Hawks": "Saint Joseph'S",
 
-    # NBA
     "Atlanta Hawks": "Atlanta",
     "Boston Celtics": "Boston",
     "Brooklyn Nets": "Brooklyn",
@@ -225,7 +224,6 @@ TEAM_NAME_MAP = {
     "Utah Jazz": "Utah",
     "Washington Wizards": "Washington",
 
-    # WNBA
     "Atlanta Dream": "Atlanta",
     "Chicago Sky": "Chicago",
     "Connecticut Sun": "Connecticut",
@@ -298,7 +296,7 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
     std_away_team = standardize_team_name(away_team)
 
     if len(home_history) == 0 and len(away_history) == 0:
-        print(f"Skipping {home_team} vs {away_team}: No historical data for either team.")
+        st.warning(f"Skipping {home_team} vs {away_team}: No historical data for either team.")
         return None
 
     home_window = min(len(home_history), window_size)
@@ -309,6 +307,7 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
 
     home_stats = {'mov': [], 'pts_for': [], 'pts_against': [], 'ou_hits': []}
     if home_window > 0:
+        for _, game in home_recent.iterrows():
             ou_line_val = game.get('OU_Line', 0)
             if pd.isna(ou_line_val):
                 ou_line_val = 0
@@ -341,7 +340,7 @@ def calculate_features_for_game(home_team, away_team, historical_df, window_size
             else:
                 away_stats['mov'].append(game['HomeScore'] - game['AwayScore'])
                 away_stats['pts_for'].append(game['HomeScore'])
-                away_stats['pts_against'].append(game['AwayScore'])
+                away_stats['pts_against'].append(game['HomeScore'])
                 away_stats['ou_hits'].append(ou_hit)
 
     features = {

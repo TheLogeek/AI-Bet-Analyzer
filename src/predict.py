@@ -365,7 +365,7 @@ def generate_predictions(sport_key: str):
     st.info(f"Generating predictions for {sport_key}...")
 
     try:
-        model = joblib.load('models/xgb_lgbm_rf_stacking_model.joblib')
+        model = joblib.load('../models/xgb_lgbm_rf_stacking_model.joblib')
         historical_df = pd.read_csv('data/raw/historical_basketball_data.csv', parse_dates=['Date'])
         for col in ['HomeScore', 'AwayScore', 'OU_Line']:
             historical_df[col] = pd.to_numeric(historical_df[col], errors='coerce')

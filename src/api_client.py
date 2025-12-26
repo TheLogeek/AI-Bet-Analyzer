@@ -1,6 +1,6 @@
 import os
 import requests
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import streamlit as st
 
 AVAILABLE_LEAGUES = {
@@ -11,9 +11,9 @@ AVAILABLE_LEAGUES = {
 
 def get_upcoming_games(sport_key):
     """Fetches upcoming games and their odds from The Odds API."""
-    load_dotenv()
+    #load_dotenv()
     
-    api_key = os.getenv('API_KEY')
+    api_key = st.secrets["API_KEY"]
     
     if not api_key or api_key == 'YOUR_API_KEY_HERE':
         st.error("Error: API_KEY not found or not set in .env file.")
@@ -34,8 +34,8 @@ def get_upcoming_games(sport_key):
         response = requests.get(url, timeout=30)
         response.raise_for_status()
 
-        st.info(f"Remaining requests: {response.headers['x-requests-remaining']}")
-        st.info(f"Used requests: {response.headers['x-requests-used']}")
+        #st.info(f"Remaining requests: {response.headers['x-requests-remaining']}")
+        #st.info(f"Used requests: {response.headers['x-requests-used']}")
         
         games = response.json()
         

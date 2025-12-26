@@ -61,7 +61,7 @@ def main():
 
     if 'predictions' not in st.session_state:
         st.session_state['predictions'] = None
-    
+
     col1, col2 = st.columns([1, 2])
 
     with col1:
@@ -71,21 +71,21 @@ def main():
 
     if st.session_state['predictions'] is not None:
         all_predictions_df = pd.DataFrame(st.session_state['predictions'])
-        
+
         if not all_predictions_df.empty:
             sport_key_to_league_name = {v: k for k, v in AVAILABLE_LEAGUES.items()}
-            
+
             display_league_names = ["All"] + sorted(AVAILABLE_LEAGUES.keys())
             selected_display_name = st.selectbox("Filter by League", display_league_names)
 
             st.header("Today's Predictions")
-            
+
             if selected_display_name != "All":
                 selected_sport_key = AVAILABLE_LEAGUES[selected_display_name]
                 display_df = all_predictions_df[all_predictions_df['League'] == selected_sport_key.replace('basketball_', '').upper()]
             else:
                 display_df = all_predictions_df
-            
+
             sort_order = st.selectbox(
                 "Sort Predictions By:",
                 ["Highest Probability First", "Lowest Probability First", "Default Order"],

@@ -1,5 +1,8 @@
 # AI Bet Analyzer
 
+[View Live demo](https://ai-bet-analyzer.streamlit.app)
+
+
 ## Project Description
 The AI Bet Analyzer is a Streamlit-based web application designed to provide daily Over/Under predictions for basketball matches across various leagues. It leverages historical game data, real-time odds from The Odds API, and a trained machine learning model to generate probabilistic predictions.
 
@@ -37,7 +40,7 @@ The prediction process involves several key steps:
     *   It calls `generate_predictions` for all supported leagues (NCAA, NBA, WNBA).
     *   Predictions are displayed in an interactive table, allowing users to filter by league and sort by the predicted probability (highest probability first by default).
 
-## Setup and Installation (locally) otherwise use the webapp [https://ai-bet-analyzer.streamlit.app](https://ai-bet-analyzer.streamlit.app)
+## Setup and Installation (locally)
 
 ### Prerequisites
 - Python 3.8+
